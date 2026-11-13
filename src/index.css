@@ -14,3 +14,20 @@
 .slide-indicators button{width:9px;height:9px;border:0;border-radius:20px;background:#ffffffa8;padding:0}
 .slide-indicators button.active{width:25px;background:#2e638d}
 @media(max-width:800px){.brand img{width:158px;height:48px}.campaign-slider{margin:0 12px;border-radius:10px}.campaign-image{max-height:none}.slide-arrow{width:34px;height:34px}.slide-prev{left:8px}.slide-next{right:8px}}
+
+
+/* Carousel visual refinement */
+.campaign-slider{height:440px;background:#173d31}
+.campaign-image{width:100%;height:100%;max-height:none;object-fit:cover;object-position:center 38%;transition:opacity .35s ease}
+.campaign-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(9,38,29,.88) 0%,rgba(9,38,29,.64) 43%,rgba(9,38,29,.08) 100%)}
+.campaign-copy{position:absolute;left:7%;top:50%;transform:translateY(-50%);max-width:520px;color:#fff;z-index:2}
+.campaign-kicker{font-size:10px;letter-spacing:2px;font-weight:800;color:#c6e9d5}
+.campaign-copy h2{font-family:Manrope,sans-serif;font-size:42px;line-height:1.12;letter-spacing:-1.2px;margin:16px 0 12px;color:#fff}
+.campaign-copy p{max-width:440px;font-size:14px;line-height:1.75;color:#edf6f0;margin:0 0 23px}
+.campaign-cta{display:inline-flex;align-items:center;gap:9px;border:0;border-radius:8px;background:#fff;color:#176b55;padding:13px 17px;font-size:11px;font-weight:800}
+.campaign-cta:hover{background:#eaf5ee}
+.slide-arrow{z-index:3;background:#ffffffdf;color:#176b55}
+.slide-indicators{z-index:3}
+.slide-indicators button.active{background:#fff}
+@media(max-width:800px){.campaign-slider{height:370px}.campaign-copy{left:8%;right:8%;max-width:500px}.campaign-copy h2{font-size:33px}.campaign-copy p{font-size:12px}.campaign-shade{background:linear-gradient(90deg,rgba(9,38,29,.84),rgba(9,38,29,.40))}}
+@media(max-width:520px){.campaign-slider{height:350px}.campaign-copy{left:24px;right:24px}.campaign-copy h2{font-size:28px}.campaign-copy p{font-size:11px;line-height:1.6}.campaign-kicker{font-size:8px}.campaign-cta{font-size:10px;padding:11px 13px}.slide-arrow{width:30px;height:30px}.slide-prev{left:5px}.slide-next{right:5px}}
