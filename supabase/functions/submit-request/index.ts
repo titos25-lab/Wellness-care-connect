@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
 
     const accessToken = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
     const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
-    const recipient = Deno.env.get("WELLNESS_WHATSAPP_RECIPIENT") || "258834687186";
+    const recipient = Deno.env.get("WELLNESS_WHATSAPP_RECIPIENT") || "258875414048";
     const template = Deno.env.get("WHATSAPP_TEMPLATE_NAME") || "wellness_new_request";
     const language = Deno.env.get("WHATSAPP_TEMPLATE_LANGUAGE") || "pt";
     const graphVersion = Deno.env.get("WHATSAPP_GRAPH_VERSION");
