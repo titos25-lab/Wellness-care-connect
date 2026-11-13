@@ -36,7 +36,7 @@ function App() {
   const submit = (e: React.FormEvent) => { e.preventDefault(); setSent(true); };
   const changeSlide = (direction: number) => setSlide(current => (current + direction + slides.length) % slides.length);
   return <div className="app">
-    <header className="header"><a className="brand" href="#inicio"><img src="/images/wellness-logo.svg" alt="Wellness Care" /></a>
+    <header className="header"><a className="brand" href="#inicio"><img src={`${import.meta.env.BASE_URL}images/wellness-logo.svg`} alt="Wellness Care" /></a>
       <button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Abrir menu">{mobileOpen ? <X/> : <Menu/>}</button>
       <nav className={mobileOpen ? 'nav open' : 'nav'}><a href="#inicio" onClick={() => setMobileOpen(false)}>Início</a><a href="#especialidades" onClick={() => setMobileOpen(false)}>Especialidades</a><a href="#profissionais" onClick={() => setMobileOpen(false)}>Profissionais</a><a href="#como-funciona" onClick={() => setMobileOpen(false)}>Como funciona</a><button className="btn btn-small" onClick={() => openRequest()}>Solicitar atendimento</button></nav>
     </header>
