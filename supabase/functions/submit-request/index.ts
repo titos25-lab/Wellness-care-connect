@@ -1,11 +1,14 @@
 // Supabase Edge Function: submit-request
-// Sends a pre-approved WhatsApp template to the Wellness Care Business number.
-// Configure all values as Supabase Function Secrets; never place Meta tokens in frontend code.
+// Sends new referral requests by email to the Wellness Care administration inbox.
+// Configure RESEND_API_KEY and RESEND_FROM_EMAIL as Supabase Function Secrets.
+// Never place email-provider credentials in frontend code.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+const inbox = "Wellnesscaremoz@gmail.com";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -22,53 +25,54 @@ Deno.serve(async (req: Request) => {
     if (!name || !phone || !specialty || !modality) {
       return json({ error: "Preencha nome, telefone, especialidade e modalidade." }, 400);
     }
-    if (!/^\+?[0-9 ()-]{8,25}$/.test(phone)) {
+    if (!/^\\+?[0-9 ()-]{8,25}$/.test(phone)) {
       return json({ error: "Indique um número de telefone válido." }, 400);
     }
 
-    const accessToken = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
-    const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
-    const recipient = Deno.env.get("WELLNESS_WHATSAPP_RECIPIENT") || "258875414048";
-    const template = Deno.env.get("WHATSAPP_TEMPLATE_NAME") || "wellness_new_request";
-    const language = Deno.env.get("WHATSAPP_TEMPLATE_LANGUAGE") || "pt";
-    const graphVersion = Deno.env.get("WHATSAPP_GRAPH_VERSION");
-
-    if (!accessToken || !phoneNumberId || !graphVersion) {
-      console.error("WhatsApp Cloud API secrets are not fully configured.");
-      return json({ error: "O canal de notificações ainda não está configurado." }, 503);
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    const from = Deno.env.get("RESEND_FROM_EMAIL");
+    if (!apiKey || !from) {
+      console.error("Resend email secrets are not fully configured.");
+      return json({ error: "O envio de notificações por email ainda não está configurado." }, 503);
     }
 
-    const response = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
+    const subject = `Novo pedido de encaminhamento — ${specialty}`;
+    const textBody = [
+      "Foi recebido um novo pedido no site Wellness Care.",
+      "",
+      `Nome: ${name}`,
+      `Telefone: ${phone}`,
+      `Especialidade: ${specialty}`,
+      `Profissional: ${professional || "Equipa Wellness Care"}`,
+      `Modalidade: ${modality}`,
+      "",
+      "Este pedido requer acompanhamento da equipa administrativa.",
+      "Não foram incluídas informações clínicas sensíveis."
+    ].join("\\n");
+    const htmlBody = `<h2>Novo pedido de encaminhamento</h2>
+      <p>Foi recebido um novo pedido no site Wellness Care.</p>
+      <table cellpadding="8" cellspacing="0" style="border-collapse:collapse">
+        <tr><td><strong>Nome</strong></td><td>${escapeHtml(name)}</td></tr>
+        <tr><td><strong>Telefone</strong></td><td>${escapeHtml(phone)}</td></tr>
+        <tr><td><strong>Especialidade</strong></td><td>${escapeHtml(specialty)}</td></tr>
+        <tr><td><strong>Profissional</strong></td><td>${escapeHtml(professional || "Equipa Wellness Care")}</td></tr>
+        <tr><td><strong>Modalidade</strong></td><td>${escapeHtml(modality)}</td></tr>
+      </table>
+      <p>Este pedido requer acompanhamento da equipa administrativa.</p>`;
+
+    const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: recipient,
-        type: "template",
-        template: {
-          name: template,
-          language: { code: language },
-          components: [{
-            type: "body",
-            parameters: [
-              { type: "text", text: name },
-              { type: "text", text: phone },
-              { type: "text", text: specialty },
-              { type: "text", text: professional || "Equipa Wellness Care" },
-              { type: "text", text: modality }
-            ]
-          }]
-        }
-      })
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [inbox], subject, text: textBody, html: htmlBody })
     });
 
-    const result = await response.json();
+    const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-      console.error("WhatsApp API error:", JSON.stringify(result));
-      return json({ error: "Não foi possível notificar a Wellness Care. Verifique o modelo aprovado e as credenciais da Meta." }, 502);
+      console.error("Email provider error:", JSON.stringify(result));
+      return json({ error: "Não foi possível enviar o email. Verifique a configuração do serviço de email." }, 502);
     }
-    return json({ ok: true, message: "Pedido encaminhado para a Wellness Care." }, 200);
+
+    return json({ ok: true, message: "Pedido enviado para o email da Wellness Care." }, 200);
   } catch (error) {
     console.error("Request processing error:", error);
     return json({ error: "Pedido inválido ou erro interno." }, 400);
@@ -76,7 +80,12 @@ Deno.serve(async (req: Request) => {
 });
 
 function clean(value: unknown, max: number): string {
-  return typeof value === "string" ? value.replace(/[<>\u0000-\u001F]/g, " ").trim().slice(0, max) : "";
+  return typeof value === "string" ? value.replace(/[<>\\u0000-\\u001F]/g, " ").trim().slice(0, max) : "";
+}
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[char] || char);
 }
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
