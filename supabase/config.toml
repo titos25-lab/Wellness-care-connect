@@ -1,0 +1,4 @@
+project_id = "wellness-care-connect"
+
+[functions.submit-request]
+verify_jwt = false
