@@ -23,7 +23,8 @@ Primeira estrutura criada:
 
 - React + TypeScript
 - Vite
-- Supabase (schema inicial)
+- Supabase JS (cliente preparado; ligação depende das credenciais)
+- GitHub Actions para validação automática de build
 - CSS responsivo
 
 ## Executar localmente
@@ -40,6 +41,9 @@ npm run build
 ```
 
 ## Configuração futura do Supabase
+
+O ficheiro `.env.example` mostra as variáveis necessárias. Copie-o para `.env.local` e preencha os valores do seu projeto Supabase. Não publique chaves secretas nem a chave `service_role` no frontend.
+
 
 1. Criar um projeto Supabase.
 2. Rever os requisitos legais, de privacidade e de licenciamento aplicáveis em Moçambique.
