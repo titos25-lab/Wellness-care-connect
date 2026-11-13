@@ -33,24 +33,33 @@ function App() {
   const [form, setForm] = useState({ name: '', phone: '', specialty: 'Psicologia', mode: 'Online', note: '' });
   const filtered = useMemo(() => professionals.filter(p => (active === 'Todas' || p.specialty === active) && (p.name+p.specialty+p.location).toLowerCase().includes(query.toLowerCase())), [active, query]);
   const openRequest = (specialty?: string) => { setForm(f => ({ ...f, specialty: specialty || f.specialty })); setSent(false); setShowRequest(true); };
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const whatsappNumber = '258834687186';
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      alert('O serviço de pedidos ainda está a ser configurado. Por favor, tente novamente mais tarde.');
+      return;
+    }
     const professional = professionals.find(p => p.specialty === form.specialty)?.name || 'Equipa Wellness Care';
-    const message = [
-      'Olá, Wellness Care! Gostaria de solicitar um encaminhamento.',
-      '',
-      'Nome: ' + form.name,
-      'Telefone: ' + form.phone,
-      'Especialidade: ' + form.specialty,
-      'Profissional de referência: ' + professional,
-      'Modalidade: ' + form.mode,
-      form.note ? 'Observação: ' + form.note : '',
-      '',
-      'Aguardo o vosso contacto. Obrigado(a)!'
-    ].filter(Boolean).join('\\n');
-    window.open('https://wa.me/' + whatsappNumber + '?text=' + encodeURIComponent(message), '_blank', 'noopener,noreferrer');
-    setSent(true);
+    try {
+      const response = await fetch(`${supabaseUrl}/functions/v1/submit-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': supabaseAnonKey, 'Authorization': `Bearer ${supabaseAnonKey}` },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          phone: form.phone.trim(),
+          specialty: form.specialty,
+          professional,
+          modality: form.mode
+        })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Não foi possível enviar o pedido.');
+      setSent(true);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Falha ao enviar o pedido. Tente novamente.');
+    }
   };
   const changeSlide = (direction: number) => setSlide(current => (current + direction + slides.length) % slides.length);
   return <div className="app">
@@ -73,7 +82,7 @@ function App() {
       <section className="cta"><div><div className="eyebrow">WELLNESS CARE CONNECT</div><h2>Uma ligação pode ser o primeiro passo.</h2><p>Conte-nos o que procura. A nossa equipa ajuda a encaminhar o seu pedido.</p></div><button className="btn btn-light" onClick={()=>openRequest()}>Solicitar atendimento <ArrowRight size={17}/></button></section>
     </main>
     <footer><a className="brand footer-brand" href="#inicio"><img src={`${import.meta.env.BASE_URL}images/wellness-logo.svg`} alt="Wellness Care"/></a><p>Conectamos pessoas a profissionais de saúde independentes.</p><div className="footer-bottom"><span>© {new Date().getFullYear()} Wellness Care. Todos os direitos reservados.</span><a href="mailto:Wellnesscaremoz@gmail.com">Wellnesscaremoz@gmail.com</a><a href="tel:+258834687186">+258 83 468 7186</a></div><small className="legal">A Wellness Care atua na intermediação e gestão administrativa de encaminhamentos. Não é uma clínica nem substitui serviços de emergência. Os atos técnicos e clínicos são da responsabilidade dos profissionais independentes.</small></footer>
-    {showRequest && <div className="modal-backdrop" onClick={()=>setShowRequest(false)}><div className="modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setShowRequest(false)} aria-label="Fechar"><X/></button>{sent ? <div className="success"><CheckCircle2 size={48}/><h2>Pedido preparado!</h2><p>O WhatsApp Business da Wellness Care foi aberto com os dados do seu pedido. Envie a mensagem no WhatsApp para concluir a solicitação.</p><button className="btn" onClick={()=>setShowRequest(false)}>Fechar</button></div> : <><div className="eyebrow">PEDIDO DE ENCAMINHAMENTO</div><h2>Como podemos ajudar?</h2><p className="modal-desc">Preencha os dados. Ao continuar, o WhatsApp Business da Wellness Care será aberto com a mensagem pronta para enviar.</p><form onSubmit={submit}><label>Nome completo<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="O seu nome"/></label><label>Telefone<input required value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+258 ..."/></label><label>Especialidade<select value={form.specialty} onChange={e=>setForm({...form,specialty:e.target.value})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label><label>Modalidade<select value={form.mode} onChange={e=>setForm({...form,mode:e.target.value})}><option>Online</option><option>Presencial</option><option>Indiferente</option></select></label><label>Informação adicional (opcional)<textarea value={form.note} onChange={e=>setForm({...form,note:e.target.value})} placeholder="Não inclua informações clínicas sensíveis nesta fase."/></label><button className="btn submit-btn">Enviar pedido pelo WhatsApp <ArrowRight size={17}/></button><small>O pedido será enviado para o WhatsApp Business da Wellness Care (+258 83 468 7186). Não inclua informações clínicas sensíveis nesta mensagem.</small></form></>}</div></div>}
+    {showRequest && <div className="modal-backdrop" onClick={()=>setShowRequest(false)}><div className="modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setShowRequest(false)} aria-label="Fechar"><X/></button>{sent ? <div className="success"><CheckCircle2 size={48}/><h2>Pedido preparado!</h2><p>O seu pedido foi enviado automaticamente à equipa Wellness Care. Entraremos em contacto consigo em breve.</p><button className="btn" onClick={()=>setShowRequest(false)}>Fechar</button></div> : <><div className="eyebrow">PEDIDO DE ENCAMINHAMENTO</div><h2>Como podemos ajudar?</h2><p className="modal-desc">Preencha os dados. Ao submeter, o pedido será enviado directamente à equipa administrativa da Wellness Care.</p><form onSubmit={submit}><label>Nome completo<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="O seu nome"/></label><label>Telefone<input required value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+258 ..."/></label><label>Especialidade<select value={form.specialty} onChange={e=>setForm({...form,specialty:e.target.value})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label><label>Modalidade<select value={form.mode} onChange={e=>setForm({...form,mode:e.target.value})}><option>Online</option><option>Presencial</option><option>Indiferente</option></select></label><label>Informação adicional (opcional)<textarea value={form.note} onChange={e=>setForm({...form,note:e.target.value})} placeholder="Não inclua informações clínicas sensíveis nesta fase."/></label><button className="btn submit-btn">Enviar pedido <ArrowRight size={17}/></button><small>Os seus dados de contacto serão enviados à equipa administrativa para encaminhamento. Não inclua informações clínicas sensíveis.</small></form></>}</div></div>}
   </div>;
 }
 export default App;
