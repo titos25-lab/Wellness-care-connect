@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Activity, ArrowRight, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, HeartHandshake, Menu, Search, ShieldCheck, Stethoscope, Users, Video, X, Mic, Dumbbell, Brain, Smile, Accessibility } from 'lucide-react';
 
 type Professional = { name: string; specialty: string; mode: string; location: string; initials: string; description: string };
@@ -14,8 +14,13 @@ const professionals: Professional[] = [
 const categories = ['Psicologia', 'Dentista', 'Terapeuta da Fala', 'Terapeuta Ocupacional', 'Fisioterapeuta', 'Psiquiatra', 'Personal Trainer'];
 const categoryIcons = [<HeartHandshake/>, <Smile/>, <Mic/>, <Accessibility/>, <Activity/>, <Brain/>, <Dumbbell/>];
 const slides = [
-  { image: '/images/wellness-mental-slide.webp', alt: 'Campanha Wellness Care — cuidar da mente', title: 'Cuidar da mente', caption: 'Cuidar da sua saúde mental começa com um atendimento humano e confiável.', professional: 'Psicóloga Maria M.' },
-  { image: '/images/wellness-dental-slide.webp', alt: 'Campanha Wellness Care — cuidar do sorriso', title: 'Cuidar do sorriso', caption: 'É também cuidar da sua saúde, autoestima e qualidade de vida.', professional: 'Basilia Macaringue · Técnica de Saúde Oral' },
+  { image: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?auto=format&fit=crop&w=1800&q=85', alt: 'Psicóloga em consulta num gabinete acolhedor', title: 'A sua saúde mental importa', caption: 'Encontre apoio psicológico com escuta, respeito e confidencialidade.', professional: 'Psicologia' },
+  { image: 'https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=1800&q=85', alt: 'Profissional de medicina dentária numa clínica moderna', title: 'Cuide do seu sorriso', caption: 'A saúde oral também faz parte do seu bem-estar e qualidade de vida.', professional: 'Dentista' },
+  { image: 'https://images.unsplash.com/photo-1584982751601-97dcc096659c?auto=format&fit=crop&w=1800&q=85', alt: 'Profissional de saúde a acompanhar uma criança', title: 'Comunicar é crescer', caption: 'A terapia da fala pode apoiar a comunicação em diferentes fases da vida.', professional: 'Terapeuta da Fala' },
+  { image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1800&q=85', alt: 'Profissional de saúde a orientar um paciente', title: 'Mais autonomia no dia a dia', caption: 'A terapia ocupacional promove funcionalidade, participação e independência.', professional: 'Terapeuta Ocupacional' },
+  { image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1800&q=85', alt: 'Sessão de reabilitação física', title: 'Movimento é qualidade de vida', caption: 'A fisioterapia ajuda a recuperar mobilidade e funcionalidade.', professional: 'Fisioterapeuta' },
+  { image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1800&q=85', alt: 'Profissional médico em ambiente de consulta', title: 'Acompanhamento especializado', caption: 'Cuidados de saúde mental com avaliação e acompanhamento médico.', professional: 'Psiquiatra' },
+  { image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1800&q=85', alt: 'Personal trainer a orientar exercício físico', title: 'Invista no seu bem-estar', caption: 'Construa hábitos activos com orientação ajustada aos seus objectivos.', professional: 'Personal Trainer' },
 ];
 function App() {
   const [query, setQuery] = useState('');
@@ -24,6 +29,7 @@ function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sent, setSent] = useState(false);
   const [slide, setSlide] = useState(0);
+  useEffect(() => { const timer = window.setInterval(() => setSlide(current => (current + 1) % slides.length), 6000); return () => window.clearInterval(timer); }, []);
   const [form, setForm] = useState({ name: '', phone: '', specialty: 'Psicologia', mode: 'Online', note: '' });
   const filtered = useMemo(() => professionals.filter(p => (active === 'Todas' || p.specialty === active) && (p.name+p.specialty+p.location).toLowerCase().includes(query.toLowerCase())), [active, query]);
   const openRequest = (specialty?: string) => { setForm(f => ({ ...f, specialty: specialty || f.specialty })); setSent(false); setShowRequest(true); };
