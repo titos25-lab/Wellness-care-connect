@@ -25,7 +25,7 @@ Deno.serve(async (req: Request) => {
     if (!name || !phone || !specialty || !modality) {
       return json({ error: "Preencha nome, telefone, especialidade e modalidade." }, 400);
     }
-    if (!/^\\+?[0-9 ()-]{8,25}$/.test(phone)) {
+    if (!/^\+?[0-9 ()-]{8,25}$/.test(phone)) {
       return json({ error: "Indique um número de telefone válido." }, 400);
     }
 
@@ -48,7 +48,7 @@ Deno.serve(async (req: Request) => {
       "",
       "Este pedido requer acompanhamento da equipa administrativa.",
       "Não foram incluídas informações clínicas sensíveis."
-    ].join("\\n");
+    ].join("\n");
     const htmlBody = `<h2>Novo pedido de encaminhamento</h2>
       <p>Foi recebido um novo pedido no site Wellness Care.</p>
       <table cellpadding="8" cellspacing="0" style="border-collapse:collapse">
@@ -80,7 +80,7 @@ Deno.serve(async (req: Request) => {
 });
 
 function clean(value: unknown, max: number): string {
-  return typeof value === "string" ? value.replace(/[<>\\u0000-\\u001F]/g, " ").trim().slice(0, max) : "";
+  return typeof value === "string" ? value.replace(/[<>\u0000-\u001F]/g, " ").trim().slice(0, max) : "";
 }
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({
